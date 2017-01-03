@@ -11,6 +11,9 @@ import java.util.concurrent.CountDownLatch;
  */
 public class RedisMessageReceiver {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisMessageReceiver.class);
+    /**
+     * 消息消费方法名称
+     */
     public static final String DEFAULT_LISTENEER_METHOD = "receiveMessage";
 
     private CountDownLatch latch;

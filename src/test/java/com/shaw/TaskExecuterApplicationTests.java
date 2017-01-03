@@ -2,22 +2,19 @@ package com.shaw;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.shaw.bo.RedisMessage;
 import com.shaw.utils.DownloadUtils;
 import com.shaw.utils.ThreadPoolManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @RunWith(SpringRunner.class)
@@ -25,30 +22,16 @@ import java.util.concurrent.TimeoutException;
 public class TaskExecuterApplicationTests {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
+
 
     @Test
-    public void testPop() {
-        RedisMessage<TestClass> redisMessage = new RedisMessage<>();
-        TestClass testClass = new TestClass();
-        testClass.setPath("E:/");
-        testClass.setName("title");
-        testClass.setUrl("http://sawb.mne");
-        redisMessage.setData(testClass);
-        redisMessage.setExtendedInfo("test2");
-        redisMessage.setTopic("Pixiv_Download");
-        System.out.println(redisTemplate.opsForSet().pop("testSet"));
-
-
-        final String channel = "testChannel";
-        redisTemplate.execute(new RedisCallback<Long>() {
-            @Override
-            public Long doInRedis(RedisConnection connection) throws DataAccessException {
-                return connection.publish("PUBLISH".getBytes(), channel.getBytes());
-
-            }
-        });
+    public void testTemplate() {
+        redisTemplate.opsForValue().set("test", "test");
+        redisTemplate.expire("test", 1000L, TimeUnit.MINUTES);
+        System.out.println(redisTemplate.opsForValue().get("test"));
     }
+
 
     //  测试使用线程执行器，同时下载两幅插画
     @Test

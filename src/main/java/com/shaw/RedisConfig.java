@@ -15,9 +15,16 @@ import java.util.concurrent.CountDownLatch;
 @Configuration
 public class RedisConfig {
 
+    /**
+     * 订阅的频道
+     */
     @Value("${redis.channel.download}")
     private String channel;
 
+    /**
+     * 同步计数器
+     * 用于保持redis消息监听器状态
+     */
     @Bean
     CountDownLatch latch() {
         return new CountDownLatch(1);
@@ -25,6 +32,7 @@ public class RedisConfig {
 
     /**
      * 操作模板
+     * connectionFactory 为spring-data-redis 自动注入
      */
     @Bean
     StringRedisTemplate template(RedisConnectionFactory connectionFactory) {
