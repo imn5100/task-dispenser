@@ -9,6 +9,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -35,6 +38,16 @@ public class TaskExecuterApplicationTests {
         redisMessage.setExtendedInfo("test2");
         redisMessage.setTopic("Pixiv_Download");
         System.out.println(redisTemplate.opsForSet().pop("testSet"));
+
+
+        final String channel = "testChannel";
+        redisTemplate.execute(new RedisCallback<Long>() {
+            @Override
+            public Long doInRedis(RedisConnection connection) throws DataAccessException {
+                return connection.publish("PUBLISH".getBytes(), channel.getBytes());
+
+            }
+        });
     }
 
     //  测试使用线程执行器，同时下载两幅插画
