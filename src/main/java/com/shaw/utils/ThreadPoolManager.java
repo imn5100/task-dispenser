@@ -13,7 +13,7 @@ import java.util.concurrent.*;
  */
 public enum ThreadPoolManager {
     INSTANCE;// 唯一的实例
-    private int POOL_SIZE_MIN = 0; // 线程池最小数量
+    private int POOL_SIZE_MIN = 100; // 线程池最小数量
     private int POOL_SIZE_MAX = 200;// 线程池最大数量数
     private int TIME_KEEP_ALIVE = 10;// 线程允许空闲时间
     private int SIZE_WORK_QUEUE = 40;// 线程池缓存队列大小
