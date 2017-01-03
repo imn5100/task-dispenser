@@ -4,7 +4,6 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -317,9 +316,18 @@ public class Downloader extends Observable {
         File file = new File(savePath);
         if (!file.exists()) file.mkdirs();
         savePath = file.getAbsolutePath() + "/" + url.substring(url.lastIndexOf("/"));
-        File saveFile = new File(savePath);
-        FileUtils.copyInputStreamToFile(is, saveFile);
-        System.out.println("Over:" + (System.currentTimeMillis() - start));
+        RandomAccessFile randomAccessFile = new RandomAccessFile(savePath, "rw");
+        FileChannel channel = randomAccessFile.getChannel();
+        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, method.getResponseContentLength());
+        byte[] bytes = new byte[4 * 1024];
+        int len;
+        while ((len = is.read(bytes)) != -1) {
+            buffer.put(bytes, 0, len);
+        }
+        buffer.flip();
+        buffer.force();
+        channel.close();
+        randomAccessFile.close();
     }
 
 }
