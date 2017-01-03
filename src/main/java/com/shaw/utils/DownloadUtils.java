@@ -25,7 +25,7 @@ public class DownloadUtils {
         httpClient = new HttpClient(clientParams);
     }
 
-    public static boolean downloadRequest(String url, String savePath) {
+    public static boolean downloadByUrl(String url, String savePath) {
         GetMethod method = new GetMethod(url);
         method.setRequestHeader(ConfigBean.REFHeader);
         method.setRequestHeader(ConfigBean.UAHeader);

@@ -1,5 +1,6 @@
 package com.shaw;
 
+import com.shaw.bo.RedisMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,14 @@ public class TaskExecuterApplicationTests {
 
     @Test
     public void testPop() {
-//        TestClass testClass = new TestClass();
-//        testClass.setPath("E:/");
-//        testClass.setName("title");
-//        testClass.setUrl("http://sawb.mne");
-//        redisTemplate.opsForSet().add("testSet", testClass);
+        RedisMessage<TestClass> redisMessage = new RedisMessage<>();
+        TestClass testClass = new TestClass();
+        testClass.setPath("E:/");
+        testClass.setName("title");
+        testClass.setUrl("http://sawb.mne");
+        redisMessage.setData(testClass);
+        redisMessage.setExtendedInfo("test2");
+        redisMessage.setTopic("Pixiv_Download");
         System.out.println(redisTemplate.opsForSet().pop("testSet"));
     }
 }

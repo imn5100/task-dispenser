@@ -20,13 +20,4 @@ public class ConfigBean {
     public static String PIXIV_REFERER;
     public static Header UAHeader = new Header("User-Agent", USER_AGENT);
     public static Header REFHeader = new Header("Referer", PIXIV_REFERER);
-
-
-    @Bean
-    public HttpClient buildHttpClient() {
-        HttpClientParams clientParams = new HttpClientParams();
-        clientParams.setConnectionManagerTimeout(TIMEOUT);
-        HttpClient client = new HttpClient(clientParams);
-        return client;
-    }
 }
