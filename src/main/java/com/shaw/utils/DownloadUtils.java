@@ -35,13 +35,18 @@ public class DownloadUtils {
      */
     public static String downloadByUrlAndSavePath(String url, String savePath) {
         try {
+            File file = new File(savePath);
+            if (!file.exists()) file.mkdirs();
+            savePath = file.getAbsolutePath() + "/" + url.substring(url.lastIndexOf("/"));
+            File saveFile = new File(savePath);
+            if (saveFile.exists()) {
+                downloadLogger.info("Existing file with the same name, deemed to have been downloaded");
+                return savePath;
+            }
             URL connUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) connUrl.openConnection();
             setHeader(conn);
             InputStream is = conn.getInputStream();
-            File file = new File(savePath);
-            if (!file.exists()) file.mkdirs();
-            savePath = file.getAbsolutePath() + "/" + url.substring(url.lastIndexOf("/"));
             return saveStreamToFile(is, savePath, conn.getContentLengthLong());
         } catch (Exception e) {
             downloadLogger.error(String.format("%s Download Error", url));
@@ -74,11 +79,6 @@ public class DownloadUtils {
      * 使用文件内存映射保存文件
      */
     private static String saveStreamToFile(InputStream is, String savePath, long contentLength) throws IOException {
-        File saveFile = new File(savePath);
-        if (saveFile.exists()) {
-            downloadLogger.info("Existing file with the same name, deemed to have been downloaded");
-            return savePath;
-        }
         RandomAccessFile randomAccessFile = new RandomAccessFile(savePath, "rw");
         FileChannel channel = randomAccessFile.getChannel();
         try {

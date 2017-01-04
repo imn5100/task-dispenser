@@ -13,21 +13,21 @@ import java.util.concurrent.*;
  */
 public enum ThreadPoolManager {
     INSTANCE;// 唯一的实例
-    private int POOL_SIZE_MIN = 100; // 线程池最小数量
+    private int POOL_SIZE_CORE = 100; // 核心线程池数量
     private int POOL_SIZE_MAX = 200;// 线程池最大数量数
     private int TIME_KEEP_ALIVE = 10;// 线程允许空闲时间
     private int SIZE_WORK_QUEUE = 40;// 线程池缓存队列大小
     // 线程执行类 属于google Guava包下，在Future基础上对线程池的封装，
     ListeningExecutorService executorService;
     //是否开启记录日志
-    public static final boolean OPEN_LOGGER = true;
+    public static final boolean OPEN_LOGGER = false;
     //日志记录类
     private Logger logger = LoggerFactory.getLogger(ThreadPoolManager.class);
 
     // 通过构造函数完成 线程池初始化和装饰。
     ThreadPoolManager() {
         // 构造线程池执行器
-        final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(POOL_SIZE_MIN, POOL_SIZE_MAX, TIME_KEEP_ALIVE,
+        final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(POOL_SIZE_CORE, POOL_SIZE_MAX, TIME_KEEP_ALIVE,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(SIZE_WORK_QUEUE), new RejectedExecution());
         // 包装线程池执行器
         executorService = MoreExecutors.listeningDecorator(threadPool);
