@@ -23,7 +23,8 @@ public class RedisConfig {
 
     /**
      * 同步计数器
-     * 用于保持redis消息监听器状态
+     * 用于保持redis消息监听器状态，主线程等待子线程退出
+     * 当count值为0时，子线程退出
      */
     @Bean
     CountDownLatch latch() {

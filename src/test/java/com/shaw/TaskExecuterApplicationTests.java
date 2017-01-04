@@ -39,13 +39,13 @@ public class TaskExecuterApplicationTests {
         ListenableFuture<String> result = ThreadPoolManager.INSTANCE.addExecuteTask(new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return DownloadUtils.downloadByUrl("http://i2.pixiv.net/img-original/img/2016/12/26/12/33/55/60570189_p0.jpg", "D:/");
+                return DownloadUtils.downloadByUrlAndSavePath("http://i2.pixiv.net/img-original/img/2016/12/26/12/33/55/60570189_p0.jpg", "D:/");
             }
         });
         ListenableFuture<String> result2 = ThreadPoolManager.INSTANCE.addExecuteTask(new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return DownloadUtils.downloadByUrl("https://i4.pixiv.net/img-original/img/2015/08/26/19/28/26/52200483_p0.jpg", "D:/");
+                return DownloadUtils.downloadByUrlAndSavePath("https://i4.pixiv.net/img-original/img/2015/08/26/19/28/26/52200483_p0.jpg", "D:/");
             }
         });
 //        使用get方法是，当前线程发送阻塞。直到取到结果。

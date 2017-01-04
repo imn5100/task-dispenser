@@ -16,7 +16,7 @@ public class SimpleMainTest {
         return new Runnable() {
             @Override
             public void run() {
-                DownloadUtils.downloadByUrl(url, savePath);
+                DownloadUtils.downloadByUrlAndSavePath(url, savePath);
             }
         };
     }

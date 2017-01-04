@@ -29,7 +29,12 @@ public class DownloadUtils {
 
     public static Logger downloadLogger = LoggerFactory.getLogger(DownloadUtils.class);
 
-    public static String downloadByUrl(String url, String savePath) {
+
+    /**
+     * url 下载链接
+     * savePath 保存路径(由url获取名字)
+     */
+    public static String downloadByUrlAndSavePath(String url, String savePath) {
         try {
             URL connUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) connUrl.openConnection();
@@ -46,17 +51,25 @@ public class DownloadUtils {
         }
     }
 
-    //设置请求头
-    private static void setHeader(URLConnection conn) {
-        conn.setRequestProperty("User-Agent", UA);
-        conn.setRequestProperty("Referer", REFER);
-        conn.setRequestProperty("Accept-Language", "en-us,en;q=0.7,zh-cn;q=0.3");
-        conn.setRequestProperty("Accept-Encoding", "utf-8");
-        conn.setRequestProperty("Keep-Alive", "300");
-        conn.setRequestProperty("connnection", "keep-alive");
-        conn.setConnectTimeout((int) TIMEOUT);
-        conn.setReadTimeout((int) READTIMEOUT);
+    /**
+     * url 下载链接
+     * filePath 保存文件路径(名字由filepath定义)
+     */
+    public static String downloadByUrlAndFilePath(String url, File filePath) {
+        try {
+            URL connUrl = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) connUrl.openConnection();
+            setHeader(conn);
+            InputStream is = conn.getInputStream();
+            String savePath = filePath.getAbsolutePath();
+            return saveStreamToFile(is, savePath, conn.getContentLengthLong());
+        } catch (Exception e) {
+            downloadLogger.error(String.format("%s Download Error", url));
+            downloadLogger.error("Exception：", e);
+            return null;
+        }
     }
+
 
     //使用文件内存映射保存文件
     private static String saveStreamToFile(InputStream is, String savePath, long contentLength) throws IOException {
@@ -76,5 +89,26 @@ public class DownloadUtils {
             channel.close();
             randomAccessFile.close();
         }
+    }
+
+    //设置请求头
+    private static void setHeader(URLConnection conn) {
+        conn.setRequestProperty("User-Agent", UA);
+        conn.setRequestProperty("Referer", REFER);
+        conn.setRequestProperty("Accept-Language", "en-us,en;q=0.7,zh-cn;q=0.3");
+        conn.setRequestProperty("Accept-Encoding", "utf-8");
+        conn.setRequestProperty("Keep-Alive", "300");
+        conn.setRequestProperty("connnection", "keep-alive");
+        conn.setConnectTimeout((int) TIMEOUT);
+        conn.setReadTimeout((int) READTIMEOUT);
+    }
+
+    public static Runnable getDownloadTask(final String url, final String savePath) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                DownloadUtils.downloadByUrlAndSavePath(url, savePath);
+            }
+        };
     }
 }
