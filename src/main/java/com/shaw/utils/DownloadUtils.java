@@ -61,6 +61,10 @@ public class DownloadUtils {
      */
     public static String downloadByUrlAndFilePath(String url, File filePath) {
         try {
+            if (filePath.exists()) {
+                downloadLogger.info("Existing file with the same name, deemed to have been downloaded");
+                return filePath.getAbsolutePath();
+            }
             URL connUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) connUrl.openConnection();
             setHeader(conn);
