@@ -32,6 +32,7 @@ public class RedisMessageReceiver {
 
     public void receiveMessage(String message) {
         JSONObject messageObject = JSONObject.parseObject(message);
+        System.out.println(messageObject);
         String topic = messageObject.getString("topic");
         if (TOPIC.equals(topic)) {
             String url = messageObject.getString("url");

@@ -33,6 +33,7 @@ public enum ThreadPoolManager {
         executorService = MoreExecutors.listeningDecorator(threadPool);
         // 如果打开线程池日志，将适用房定时任务线程定时记录线程池状态到日志中
         if (OPEN_LOGGER) {
+            //日志等级为debug，正式运行环境无法显示，调试时显示日志
             Runnable mAccessBufferThread = new Runnable() {
                 @Override
                 public void run() {

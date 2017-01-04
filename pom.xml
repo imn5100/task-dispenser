@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.shaw</groupId>
-    <artifactId>task-executer</artifactId>
+    <artifactId>task-executor</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>task-executer</name>
-    <description>Demo project for Spring Boot</description>
+    <name>task-executor</name>
+    <description>Executor for Redis Message Task</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -64,12 +64,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>20.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.2</version>
         </dependency>
     </dependencies>
 
