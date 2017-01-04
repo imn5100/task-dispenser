@@ -67,6 +67,4 @@ public class RedisConfig {
         container.addMessageListener(listenerAdapter, new PatternTopic(channel));
         return container;
     }
-
-
 }

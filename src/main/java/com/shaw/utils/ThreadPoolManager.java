@@ -31,19 +31,19 @@ public enum ThreadPoolManager {
                 TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(SIZE_WORK_QUEUE), new RejectedExecution());
         // 包装线程池执行器
         executorService = MoreExecutors.listeningDecorator(threadPool);
-        // 如果打开线程池日志，将适用房定时任务线程定时记录线程池状态到日志中
+        // 打开线程池日志
         if (OPEN_LOGGER) {
-            //日志等级为debug，正式运行环境无法显示，调试时显示日志
+            //日志输出定时任务
             Runnable mAccessBufferThread = new Runnable() {
                 @Override
                 public void run() {
-                    logger.debug(String.format(
-                            "business_treadPool thread message activeCount: %s,CompletedTaskCount: %s,taskCount: %s, queue_size: %s",
+                    logger.info(String.format(
+                            "treadPool thread message activeCount: %s,CompletedTaskCount: %s,taskCount: %s, queue_size: %s",
                             threadPool.getActiveCount(), threadPool.getCompletedTaskCount(), threadPool.getTaskCount(),
                             threadPool.getQueue().size()));
                 }
             };
-            // 初始化一个线程池大小为1的定时执行器。
+            // 定时任务执行器
             final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
             // 加入定时任务，每10秒输出一次线程池状态
             scheduler.scheduleAtFixedRate(mAccessBufferThread, 0, 10, TimeUnit.SECONDS);
@@ -64,12 +64,17 @@ public enum ThreadPoolManager {
         return executorService.submit(task);
     }
 
+    /**
+     * 异步执行
+     */
     public void execute(Runnable task) {
         executorService.execute(task);
     }
 
 
-    // 线程池拒绝任务处理策略。即进入放入队列中被阻塞。
+    /**
+     * 线程池拒绝任务处理策略。即进入放入队列时被阻塞。
+     **/
     public class RejectedExecution implements RejectedExecutionHandler {
         public RejectedExecution() {
         }

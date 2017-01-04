@@ -17,11 +17,10 @@ import java.nio.channels.FileChannel;
  * Created by Administrator on 2017/1/3 0003.
  */
 public class DownloadUtils {
-    //下载相关常量配置
     //连接超时
-    public static final long TIMEOUT = 5000;
+    public static final int TIMEOUT = 5000;
     //下载超时 1min
-    public static final long READTIMEOUT = 60 * 1000;
+    public static final int READ_TIMEOUT = 60 * 1000;
     // 连接UA
     public static final String UA = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.1599.101 Safari/537.36";
     // referer  pixiv 插画下载必须设置，否则403
@@ -71,8 +70,15 @@ public class DownloadUtils {
     }
 
 
-    //使用文件内存映射保存文件
+    /**
+     * 使用文件内存映射保存文件
+     */
     private static String saveStreamToFile(InputStream is, String savePath, long contentLength) throws IOException {
+        File saveFile = new File(savePath);
+        if (saveFile.exists()) {
+            downloadLogger.info("Existing file with the same name, deemed to have been downloaded");
+            return savePath;
+        }
         RandomAccessFile randomAccessFile = new RandomAccessFile(savePath, "rw");
         FileChannel channel = randomAccessFile.getChannel();
         try {
@@ -91,7 +97,11 @@ public class DownloadUtils {
         }
     }
 
-    //设置请求头
+    /**
+     * 设置请求头
+     * Referer必须设置，否则可能无法请求道pixiv的资源
+     * 超时时间必须设置，如果一直请求为返回，可能导致线程死锁
+     */
     private static void setHeader(URLConnection conn) {
         conn.setRequestProperty("User-Agent", UA);
         conn.setRequestProperty("Referer", REFER);
@@ -99,10 +109,13 @@ public class DownloadUtils {
         conn.setRequestProperty("Accept-Encoding", "utf-8");
         conn.setRequestProperty("Keep-Alive", "300");
         conn.setRequestProperty("connnection", "keep-alive");
-        conn.setConnectTimeout((int) TIMEOUT);
-        conn.setReadTimeout((int) READTIMEOUT);
+        conn.setConnectTimeout(TIMEOUT);
+        conn.setReadTimeout(READ_TIMEOUT);
     }
 
+    /**
+     * 创建runnable，方便递交给线程执行器执行
+     */
     public static Runnable getDownloadTask(final String url, final String savePath) {
         return new Runnable() {
             @Override
