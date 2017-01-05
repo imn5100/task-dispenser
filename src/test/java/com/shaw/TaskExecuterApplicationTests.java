@@ -34,7 +34,6 @@ public class TaskExecuterApplicationTests {
 
 
     //  测试使用线程执行器，同时下载两幅插画
-    @Test
     public void testDownload() throws InterruptedException, ExecutionException, TimeoutException {
         ListenableFuture<String> result = ThreadPoolManager.INSTANCE.addExecuteTask(new Callable<String>() {
             @Override
