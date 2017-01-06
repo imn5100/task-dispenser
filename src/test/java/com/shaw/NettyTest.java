@@ -1,17 +1,32 @@
 package com.shaw;
 
+import com.sun.org.apache.bcel.internal.generic.Select;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.socket.oio.OioServerSocketChannel;
 import io.netty.util.CharsetUtil;
+import org.springframework.expression.spel.ast.Selection;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by shaw on 2017/1/5 0005.
@@ -184,3 +199,165 @@ class EchoClient {
     }
 }
 
+class PlainNioServer {
+
+    /**
+     * java 实现阻塞的 socket 连接
+     */
+    public void oioServe(int port) throws IOException {
+        final ServerSocket socket = new ServerSocket(port);
+        try {
+            for (; ; ) {
+                final Socket clientSocket = socket.accept();
+                System.out.println("Accepted connection from " + clientSocket);
+                //每接收到一个连接请求，创建一个线程，向客户端连接写入数据
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        OutputStream out;
+                        try {
+                            out = clientSocket.getOutputStream();
+                            out.write("Hi\r\n".getBytes());
+                            out.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } finally {
+                            try {
+                                clientSocket.close();
+                            } catch (IOException e) {
+                                //ignore
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
+
+    /**
+     * Java NIO 实现非阻塞的Socket连接
+     */
+    public void nioServe(int port) throws IOException {
+        ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        serverChannel.configureBlocking(false);
+        ServerSocket sscoket = serverChannel.socket();
+        InetSocketAddress address = new InetSocketAddress(port);
+        //创建一个非阻塞的SocketServer 并绑定地址 获取channel
+        sscoket.bind(address);
+        //打卡selector处理channel
+        Selector selector = Selector.open();
+        //注册selector用于接收新的连接，当有连接是，可通过selector获取连接channel
+        serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+        final ByteBuffer msg = ByteBuffer.wrap("Hi\r\n".getBytes());
+        while (true) {
+            try {
+                //阻塞等待事件来临
+                selector.select();
+            } catch (IOException e) {
+                e.printStackTrace();
+                break;
+            }
+            //获取所有事件的selectionKey
+            Set<SelectionKey> readyKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = readyKeys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                iterator.remove();
+                try {
+                    //事件是否是一个等待接收的连接请求
+                    if (key.isAcceptable()) {
+                        ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                        //获取客户端连接
+                        java.nio.channels.SocketChannel client = server.accept();
+                        //客户端连接为非阻塞的
+                        client.configureBlocking(false);
+                        //接受新的客户端 注册到selector中
+                        client.register(selector, SelectionKey.OP_WRITE | SelectionKey.OP_READ, msg.duplicate());
+                        System.out.println("Accepted connection from " + client);
+                    }
+                    //查看socket当前是否可写入数据
+                    if (key.isWritable()) {
+                        java.nio.channels.SocketChannel client = (java.nio.channels.SocketChannel) key.channel();
+                        ByteBuffer buffer = (ByteBuffer) key.attachment();
+                        //写入数据到客户端
+                        while (buffer.hasRemaining()) {
+                            if (client.write(buffer) == 0) {
+                                break;
+                            }
+                        }
+                        //关闭连接
+                        client.close();
+                    }
+                } catch (IOException e) {
+                    key.cancel();
+                    try {
+                        key.channel().close();
+                    } catch (IOException ex) {
+                        //ignore
+                    }
+                }
+            }
+        }
+    }
+}
+
+class NettyServer {
+    public void oioServer(int port) throws IOException, InterruptedException {
+        final ByteBuf buf = Unpooled.unreleasableBuffer(Unpooled.copiedBuffer("Hi\t\n", Charset.forName("UTF-8")));
+        EventLoopGroup group = new OioEventLoopGroup();
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            //创建一个ServerBootstorp 绑定  oio  group，绑定 oio  scoketchannel，绑定本地端口，注册handler
+            b.group(group).channel(OioServerSocketChannel.class).localAddress(new InetSocketAddress(port)).childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                        @Override
+                        //ChannelHandlerContext handler group 处理过程中的上下文
+                        public void channelActive(ChannelHandlerContext ctx) {
+                            //写数据客户端中，一旦完成关闭连接
+                            ctx.writeAndFlush(buf.duplicate()).addListener(ChannelFutureListener.CLOSE);
+                        }
+                    });
+                }
+            });
+            //绑定服务器接收新连接
+            ChannelFuture f = b.bind().sync();
+            f.channel().closeFuture().sync();
+        } finally {
+            group.shutdownGracefully().sync();
+        }
+    }
+
+    public void nioServer(int port) throws IOException, InterruptedException {
+        final ByteBuf buf = Unpooled.unreleasableBuffer(Unpooled.copiedBuffer("Hi\t\n", Charset.forName("UTF-8")));
+        //创建一个nio的 事件处理group
+        EventLoopGroup group = new NioEventLoopGroup();
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            //创建一个ServerBootstorp 绑定  nio  group，绑定 nio  scoketchannel，绑定本地端口，注册handler
+            b.group(group).channel(NioServerSocketChannel.class).localAddress(new InetSocketAddress(port)).childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                        @Override
+                        //ChannelHandlerContext handler group 处理过程中的上下文
+                        public void channelActive(ChannelHandlerContext ctx) {
+                            //写数据客户端中，异步完成添加监听器，一旦完成关闭连接
+                            ctx.writeAndFlush(buf.duplicate()).addListener(ChannelFutureListener.CLOSE);
+                        }
+                    });
+                }
+            });
+            //绑定服务器接收新连接
+            ChannelFuture f = b.bind().sync();
+            f.channel().closeFuture().sync();
+        } finally {
+            group.shutdownGracefully().sync();
+        }
+    }
+}
