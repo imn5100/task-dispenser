@@ -336,10 +336,11 @@ class NettyServer {
     public void nioServer(int port) throws IOException, InterruptedException {
         final ByteBuf buf = Unpooled.unreleasableBuffer(Unpooled.copiedBuffer("Hi\t\n", Charset.forName("UTF-8")));
         //创建一个nio的 事件处理group
+        // 使用 Epoll—Linux本地非阻塞传输  NioEventLoopGroup-> EpollEventLoopGoup。只有liunx可运行
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
-            //创建一个ServerBootstorp 绑定  nio  group，绑定 nio  scoketchannel，绑定本地端口，注册handler
+            //创建一个ServerBootstorp 绑定  nio  group，绑定 nio  scoketchannel，绑定本地端口，注册handler。*NioServerSocketChannel->EpollServerSocketChannel
             b.group(group).channel(NioServerSocketChannel.class).localAddress(new InetSocketAddress(port)).childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
