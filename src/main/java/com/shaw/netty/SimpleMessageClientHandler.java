@@ -1,6 +1,7 @@
 package com.shaw.netty;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -9,6 +10,8 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -26,6 +29,11 @@ public class SimpleMessageClientHandler extends SimpleChannelInboundHandler<Stri
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("channelInactive");
     }
 
 
@@ -48,9 +56,8 @@ public class SimpleMessageClientHandler extends SimpleChannelInboundHandler<Stri
                     });
             Channel channel = bootstrap.connect(host, port).sync().channel();
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            while (true) {
-                channel.writeAndFlush(in.readLine() + "\r\n");
-            }
+            System.out.println("send1");
+            channel.writeAndFlush("{\"type\":1,\"appkey\":\"123456\"}" + "\r\n");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

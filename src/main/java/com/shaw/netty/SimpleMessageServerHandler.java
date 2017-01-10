@@ -3,6 +3,7 @@ package com.shaw.netty;
 import com.alibaba.fastjson.JSON;
 import com.shaw.utils.ThreadPoolManager;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -41,7 +42,7 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
                 channelMap.put(message.getAppKey(), ctx.channel());
             }
         } else {
-            ctx.disconnect();
+            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
