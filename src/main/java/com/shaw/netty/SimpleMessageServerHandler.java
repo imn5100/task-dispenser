@@ -1,5 +1,7 @@
 package com.shaw.netty;
 
+import com.alibaba.fastjson.JSON;
+import com.shaw.utils.ThreadPoolManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
@@ -12,59 +14,34 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.springframework.util.StringUtils;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
  * Created by shaw on 2017/1/10 0010.
  */
 public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<String> {
+
+    public static Map<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
     public static ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        Channel incoming = ctx.channel();
-        incoming.writeAndFlush("");
-        channels.writeAndFlush("[Server]-" + incoming.remoteAddress() + "加入\n");
-        channels.add(ctx.channel());
-    }
-
-
-    @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        Channel incoming = ctx.channel();
-        // Broadcast a message to multiple Channels
-        channels.writeAndFlush("[SERVER] - " + incoming.remoteAddress() + " 离开\n");
-        // A closed Channel is automatically removed from ChannelGroup,
-        // so there is no need to do "channels.remove(ctx.channel());"
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception { // (5)
-        Channel incoming = ctx.channel();
-        System.out.println("SimpleChatClient:" + incoming.remoteAddress() + "在线");
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception { // (6)
-        Channel incoming = ctx.channel();
-        System.out.println("SimpleChatClient:" + incoming.remoteAddress() + "掉线");
-    }
-
-    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        //打印连接异常信息
         cause.printStackTrace();
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
-        Channel incoming = ctx.channel();
-        for (Channel channel : channels) {
-            if (channel != incoming) {
-                channel.writeAndFlush("[" + incoming.remoteAddress() + "]" + s + "\n");
-            } else {
-                channel.writeAndFlush("[you]" + s + "\n");
+        Message message = JSON.parseObject(s, Message.class);
+        if (message.getType() == 1) {
+            if (!StringUtils.isEmpty(message.getAppKey())) {
+                channelMap.put(message.getAppKey(), ctx.channel());
             }
+        } else {
+            ctx.disconnect();
         }
     }
 
@@ -87,6 +64,7 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
                             pipeline.addLast("decoder", new StringDecoder());
                             pipeline.addLast("encoder", new StringEncoder());
                             pipeline.addLast("handler", new SimpleMessageServerHandler());
+
                         }
                     }).
                     //设置 socket 的参数选项比如tcpNoDelay 和 keepAliv
@@ -94,12 +72,75 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
                             childOption(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture f = bootstrap.bind(8001).sync();
+            ThreadPoolManager.INSTANCE.execute(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("execute!");
+                        Channel channel = SimpleMessageServerHandler.channelMap.get("123456");
+                        if (channel != null) {
+                            System.out.println("execute write!");
+                            if (channel.isActive())
+                                channel.writeAndFlush("test\n");
+                            else {
+                                System.out.println("remove");
+                                SimpleMessageServerHandler.channelMap.remove("123456");
+                            }
+                        }
+                    }
+                }
+            });
             f.channel().closeFuture().sync();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
+        }
+    }
+
+    static class Message {
+        private String appKey;
+        private String appSecret;
+        // 1 连接登录请求 2.正常消息请求
+        private Integer type;
+        private String contents;
+
+        public String getAppKey() {
+            return appKey;
+        }
+
+        public void setAppKey(String appKey) {
+            this.appKey = appKey;
+        }
+
+        public String getAppSecret() {
+            return appSecret;
+        }
+
+        public void setAppSecret(String appSecret) {
+            this.appSecret = appSecret;
+        }
+
+        public Integer getType() {
+            return type;
+        }
+
+        public void setType(Integer type) {
+            this.type = type;
+        }
+
+        public String getContents() {
+            return contents;
+        }
+
+        public void setContents(String contents) {
+            this.contents = contents;
         }
     }
 }
