@@ -1,5 +1,9 @@
 package com.shaw;
 
+import com.shaw.netty.SimpleMessageServerHandler;
+import com.shaw.netty.SocketMsgServer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -7,5 +11,13 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class ConfigBean {
+
+    @Value("${scoket.port}")
+    private Integer port;
+
+    @Bean
+    public SocketMsgServer socketMsgServer(SimpleMessageServerHandler handler) {
+        return new SocketMsgServer(port, handler);
+    }
 
 }

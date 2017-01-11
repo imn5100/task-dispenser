@@ -1,7 +1,6 @@
 package com.shaw.netty;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -10,8 +9,6 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -33,7 +30,6 @@ public class SimpleMessageClientHandler extends SimpleChannelInboundHandler<Stri
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("channelInactive");
     }
 
 
@@ -47,7 +43,6 @@ public class SimpleMessageClientHandler extends SimpleChannelInboundHandler<Stri
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-
                             pipeline.addLast("framer", new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
                             pipeline.addLast("decoder", new StringDecoder());
                             pipeline.addLast("encoder", new StringEncoder());
@@ -58,6 +53,8 @@ public class SimpleMessageClientHandler extends SimpleChannelInboundHandler<Stri
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("send1");
             channel.writeAndFlush("{\"type\":1,\"appkey\":\"123456\"}" + "\r\n");
+            //暂停线程，用于测试数据返回
+            Thread.sleep(10000);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
