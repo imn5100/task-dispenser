@@ -2,6 +2,7 @@ package com.shaw.redis;
 
 import com.alibaba.fastjson.JSONObject;
 import com.shaw.netty.SimpleMessageServerHandler;
+import com.shaw.netty.SocketMessage;
 import com.shaw.utils.DownloadUtils;
 import com.shaw.utils.ThreadPoolManager;
 import org.slf4j.Logger;
@@ -51,10 +52,10 @@ public class RedisMessageReceiver {
                 logger.info("Wrong Message:" + message);
             }
         } else if (TOPIC_TASK.equals(topic)) {
-            SimpleMessageServerHandler.SocketMessage socketMessage = null;
+            SocketMessage socketMessage = null;
             try {
                 socketMessage = JSONObject.parseObject(messageObject.getString("content"),
-                        SimpleMessageServerHandler.SocketMessage.class);
+                        SocketMessage.class);
             } catch (Exception e) {
                 logger.error("parse msg fail:" + message);
             }

@@ -1,6 +1,7 @@
 package com.shaw.redis;
 
 import com.shaw.netty.SimpleMessageServerHandler;
+import com.shaw.netty.SocketMessage;
 import com.shaw.utils.ThreadPoolManager;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -15,7 +16,7 @@ import org.springframework.util.StringUtils;
 public class SocketMsgSender {
     public static Logger logger = LoggerFactory.getLogger(SocketMsgSender.class);
 
-    public static void handlerRedisMsg(final SimpleMessageServerHandler.SocketMessage msg) {
+    public static void handlerRedisMsg(final SocketMessage msg) {
         if (msg == null || StringUtils.isEmpty(msg.getAppKey())) {
             logger.info("msg is null");
             return;
