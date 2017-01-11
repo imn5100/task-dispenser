@@ -2,10 +2,9 @@ package com.shaw.netty;
 
 import com.alibaba.fastjson.JSON;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -19,7 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by shaw on 2017/1/10 0010.
  */
 @Component
+@ChannelHandler.Sharable
 public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<String> {
+
+    public static Logger logger = LoggerFactory.getLogger(SimpleMessageServerHandler.class);
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -33,9 +35,17 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
-        Message message = JSON.parseObject(s, Message.class);
+        System.out.println("getMessage:" + s);
+        SocketMessage message = null;
+        try {
+            message = JSON.parseObject(s, SocketMessage.class);
+        } catch (Exception e) {
+            logger.warn("Get JsonStr:ParseObject fail" + s);
+            return;
+        }
         if (message.getType() == 1) {
             if (!StringUtils.isEmpty(message.getAppKey())) {
+                logger.info("put channel appkey:" + message.getAppKey());
                 channelMap.put(message.getAppKey(), ctx.channel());
             }
         } else {
@@ -43,12 +53,12 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
         }
     }
 
-    static class Message {
+    public class SocketMessage {
         private String appKey;
         private String appSecret;
+        private String contents;
         // 1 连接登录请求 2.正常消息请求
         private Integer type;
-        private String contents;
 
         public String getAppKey() {
             return appKey;

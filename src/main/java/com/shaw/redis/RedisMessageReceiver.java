@@ -1,6 +1,7 @@
 package com.shaw.redis;
 
 import com.alibaba.fastjson.JSONObject;
+import com.shaw.netty.SimpleMessageServerHandler;
 import com.shaw.utils.DownloadUtils;
 import com.shaw.utils.ThreadPoolManager;
 import org.slf4j.Logger;
@@ -14,11 +15,12 @@ import java.util.concurrent.CountDownLatch;
  * Created by shaw on 2017/1/3 0003.
  */
 public class RedisMessageReceiver {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisMessageReceiver.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisMessageReceiver.class);
     //消息消费方法名称
     public static final String DEFAULT_LISTENEER_METHOD = "receiveMessage";
     //消息主题
-    public static final String TOPIC = "download";
+    public static final String TOPIC_DOWNLOAD = "download";
+    public static final String TOPIC_TASK = "socketTask";
 
     //同步计数器,控制消息监听器进程退出时机
     private CountDownLatch latch;
@@ -34,7 +36,7 @@ public class RedisMessageReceiver {
     public void receiveMessage(String message) {
         JSONObject messageObject = JSONObject.parseObject(message);
         String topic = messageObject.getString("topic");
-        if (TOPIC.equals(topic)) {
+        if (TOPIC_DOWNLOAD.equals(topic)) {
             String url = messageObject.getString("url");
             if (!StringUtils.isEmpty(url)) {
                 String path = messageObject.getString("path");
@@ -46,10 +48,19 @@ public class RedisMessageReceiver {
                     ThreadPoolManager.INSTANCE.execute(DownloadUtils.getDownloadTask(url, "defaultSavePath/"));
                 }
             } else {
-                LOGGER.info("Wrong Message:" + message);
+                logger.info("Wrong Message:" + message);
             }
+        } else if (TOPIC_TASK.equals(topic)) {
+            SimpleMessageServerHandler.SocketMessage socketMessage = null;
+            try {
+                socketMessage = JSONObject.parseObject(messageObject.getString("content"),
+                        SimpleMessageServerHandler.SocketMessage.class);
+            } catch (Exception e) {
+                logger.error("parse msg fail:" + message);
+            }
+            SocketMsgSender.handlerRedisMsg(socketMessage);
         } else {
-            //其他消息处理
+
         }
     }
 }
