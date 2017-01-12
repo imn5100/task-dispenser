@@ -2,6 +2,8 @@ package com.shaw;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.shaw.constants.Constants;
+import com.shaw.netty.SimpleMessageServerHandler;
 import com.shaw.utils.DownloadUtils;
 import com.shaw.utils.ThreadPoolManager;
 import org.junit.Test;
@@ -30,6 +32,17 @@ public class TaskExecuterApplicationTests {
         redisTemplate.opsForValue().set("test", "test");
         redisTemplate.expire("test", 1000L, TimeUnit.MINUTES);
         System.out.println(redisTemplate.opsForValue().get("test"));
+    }
+
+    /**
+     * 模拟socket登录验证
+     */
+    @Test
+    public void pubAuthMsg() {
+        String key = String.format(Constants.USER_AUTH_KEY, "76d44f617b70c97e118c81dc579d9aa5");
+        redisTemplate.opsForValue().set(key, "{\"appSecret\":\"a0de68bc6581303c202c3cb57567878a\",\"appkey\":\"76d44f617b70c97e118c81dc579d9aa5\",\"name\":\"shaw\"}");
+        redisTemplate.expire(key, 1000L, TimeUnit.SECONDS);
+        System.out.println(redisTemplate.opsForValue().get(key));
     }
 
 
