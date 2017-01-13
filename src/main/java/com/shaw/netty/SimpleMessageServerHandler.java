@@ -77,7 +77,7 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
                     return;
                 } else {
                     JSONObject infoObject = JSONObject.parseObject(info);
-                    String appSercet = infoObject.getString("appSecret");
+                    String appSercet = infoObject.getString("appsecret");
                     if (message.getAppSecret().equals(appSercet)) {
                         //登录验证通过
                         //当重复连接时，移除上一个连接
