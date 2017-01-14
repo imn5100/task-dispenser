@@ -61,7 +61,12 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
         SocketMessage message;
         try {
-            message = JSON.parseObject(s, SocketMessage.class);
+            if (s.startsWith("{")) {
+                message = JSON.parseObject(s, SocketMessage.class);
+            } else {
+                ctx.close();
+                return;
+            }
         } catch (Exception e) {
             logger.warn("Get JsonStr:ParseObject fail" + s);
             ctx.close();
