@@ -59,7 +59,6 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
-        System.out.println("getMessage:" + s);
         SocketMessage message;
         try {
             message = JSON.parseObject(s, SocketMessage.class);
