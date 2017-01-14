@@ -1,4 +1,4 @@
-package com.shaw.netty;
+package com.shaw;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
