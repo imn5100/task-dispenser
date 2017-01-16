@@ -23,6 +23,7 @@ public class SocketMsgSender {
             logger.info("msg is null");
             return;
         }
+        //异步执行，发送接收到的socket任务消息到 已连接的客户端。
         ThreadPoolManager.INSTANCE.execute(new Runnable() {
             @Override
             public void run() {
@@ -37,7 +38,8 @@ public class SocketMsgSender {
                             public void operationComplete(Future<? super Void> future) throws Exception {
                                 if (future.isSuccess()) {
                                     logger.info(msg.getAppKey() + " is disconnect.remove channel");
-                                    SimpleMessageServerHandler.channelMap.remove(msg.getAppKey());
+                                    //当channel被关闭，会自动触发channelInactive，从map中remove掉该channel。
+//                                    SimpleMessageServerHandler.channelMap.remove(msg.getAppKey());
                                 }
                             }
                         });

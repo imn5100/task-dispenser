@@ -101,11 +101,12 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
                 ctx.close();
             }
         } else {
+            //对其他类型socket请求暂时不做处理，直接忽视，关闭channel
             ctx.close();
         }
     }
 
-
+    //当连接数开始增加到一定数量时，需要考虑移除的性能问题
     public void checkChannelMap() {
         for (String key : channelMap.keySet()) {
             final Channel channel = channelMap.get(key);
