@@ -21,14 +21,6 @@ public class RedisMessageReceiver {
     //消息消费方法名称
     public static final String DEFAULT_LISTENEER_METHOD = "receiveMessage";
 
-    //同步计数器,控制消息监听器进程退出时机
-    private CountDownLatch latch;
-
-    @Autowired
-    public RedisMessageReceiver(CountDownLatch latch) {
-        this.latch = latch;
-    }
-
     /**
      * 消息消费方法
      */

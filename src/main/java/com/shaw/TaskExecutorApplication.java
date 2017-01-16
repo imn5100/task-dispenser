@@ -16,14 +16,12 @@ public class TaskExecutorApplication {
 
     public static void main(String[] args) throws InterruptedException {
         ApplicationContext ctx = SpringApplication.run(TaskExecutorApplication.class, args);
-        CountDownLatch latch = ctx.getBean(CountDownLatch.class);
         SocketMsgServer socketMsgServer = ctx.getBean(SocketMsgServer.class);
         //启动消息发送socket服务器
         logger.info("run scoket server");
         socketMsgServer.run();
         logger.info("run scoket server over");
         //让主进程Application 等待子进程RedisMessageListener 退出
-        latch.await();
         System.exit(0);
     }
 }

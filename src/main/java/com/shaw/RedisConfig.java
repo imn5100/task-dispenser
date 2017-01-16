@@ -22,16 +22,6 @@ public class RedisConfig {
     private String channel;
 
     /**
-     * 同步计数器
-     * 用于保持redis消息监听器状态，主线程等待子线程退出
-     * 当count值为0时，子线程退出
-     */
-    @Bean
-    CountDownLatch latch() {
-        return new CountDownLatch(1);
-    }
-
-    /**
      * 操作模板
      * connectionFactory 为spring-data-redis 自动注入
      */
@@ -44,8 +34,8 @@ public class RedisConfig {
      * redis消息接收/消费类
      */
     @Bean
-    RedisMessageReceiver receiver(CountDownLatch latch) {
-        return new RedisMessageReceiver(latch);
+    RedisMessageReceiver receiver() {
+        return new RedisMessageReceiver();
     }
 
     /**
