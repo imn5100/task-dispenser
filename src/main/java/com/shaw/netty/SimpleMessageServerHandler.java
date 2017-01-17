@@ -2,10 +2,7 @@ package com.shaw.netty;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import org.slf4j.Logger;
@@ -55,6 +52,13 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         //当有连接断开时，检查非活跃channel，去除
         checkChannelMap();
+        super.channelInactive(ctx);
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        checkChannelMap();
+        super.handlerRemoved(ctx);
     }
 
     @Override
@@ -64,20 +68,20 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
             if (s.startsWith("{")) {
                 message = JSON.parseObject(s, SocketMessage.class);
             } else {
-                ctx.close();
+                ctx.writeAndFlush("No JSON object could be decoded").addListener(ChannelFutureListener.CLOSE);
                 return;
             }
         } catch (Exception e) {
             logger.warn("Get JsonStr:ParseObject fail" + s);
-            ctx.close();
+            ctx.writeAndFlush("No JSON object could be decoded").addListener(ChannelFutureListener.CLOSE);
             return;
         }
         if (message.getType() == 1) {
-            if (!StringUtils.isEmpty(message.getAppKey())) {
+            if (!StringUtils.isEmpty(message.getAppKey()) && !StringUtils.isEmpty(message.getAppSecret())) {
                 String info = redisTemplate.opsForValue().get(String.format(USER_AUTH_KEY, message.getAppKey()));
                 //未通过登录验证
-                if (info == null || message.getAppSecret() == null) {
-                    ctx.close();
+                if (info == null) {
+                    ctx.writeAndFlush("Please try to connect after login in https://shawblog.me/remoteTask/main.html ").addListener(ChannelFutureListener.CLOSE);
                     return;
                 } else {
                     JSONObject infoObject = JSONObject.parseObject(info);
@@ -93,12 +97,13 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
                         logger.info("put channel. appkey:" + message.getAppKey());
                         channelMap.put(message.getAppKey(), ctx.channel());
                         redisTemplate.opsForSet().add(USER_CLIENT_CONNECT, message.getAppKey());
+                        ctx.writeAndFlush("success");
                     } else {
-                        ctx.close();
+                        ctx.writeAndFlush("AppKey or AppSecret is wrong").addListener(ChannelFutureListener.CLOSE);
                     }
                 }
             } else {
-                ctx.close();
+                ctx.writeAndFlush("Params is Wrong").addListener(ChannelFutureListener.CLOSE);
             }
         } else {
             //对其他类型socket请求暂时不做处理，直接忽视，关闭channel
