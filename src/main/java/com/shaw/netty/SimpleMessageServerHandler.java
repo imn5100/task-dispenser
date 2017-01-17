@@ -12,8 +12,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import javax.annotation.PostConstruct;
+import java.util.concurrent.*;
 
 import static com.shaw.constants.Constants.USER_AUTH_KEY;
 import static com.shaw.constants.Constants.USER_CLIENT_CONNECT;
@@ -131,17 +131,17 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
     }
 
 
-    //    @PostConstruct
-//    public void runScheduler() {
-//        //当SimpleMessageServerHandler 被创建时，开启一个监视channelMap的定时执行器。
-//        //定时检查channel,如果channel非活跃的 关闭channel，并从map中移除
-//        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-//        //每5分钟检查一次所有连接
-//        scheduler.scheduleAtFixedRate(new Runnable() {
-//            @Override
-//            public void run() {
-//                checkChannelMap();
-//            }
-//        }, 5, 5, TimeUnit.MINUTES);
-//    }
+    @PostConstruct
+    public void runScheduler() {
+        //当SimpleMessageServerHandler 被创建时，开启一个监视channelMap的定时执行器。
+        //定时检查channel,如果channel非活跃的 关闭channel，并从map中移除
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        //每20分钟检查一次所有连接（和博客主站登录session时效相同）
+        scheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                checkChannelMap();
+            }
+        }, 20, 20, TimeUnit.MINUTES);
+    }
 }
