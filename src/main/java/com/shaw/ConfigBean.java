@@ -6,18 +6,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Created by shaw on 2017/1/3 0003.
- */
+/** Created by shaw on 2017/1/3 0003. */
 @Configuration
 public class ConfigBean {
 
-    @Value("${scoket.port}")
-    private Integer port;
+  @Value("${scoket.port}")
+  private Integer port;
 
-    @Bean
-    public SocketMsgServer socketMsgServer(SimpleMessageServerHandler handler) {
-        return new SocketMsgServer(port, handler);
-    }
-
+  @Bean
+  public SocketMsgServer socketMsgServer(SimpleMessageServerHandler handler) {
+    return new SocketMsgServer(port, handler);
+  }
 }
