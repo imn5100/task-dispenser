@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import java.util.Map;
 import java.util.concurrent.*;
 
 import static com.shaw.constants.Constants.USER_AUTH_KEY;
@@ -31,8 +32,7 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
     private RedisTemplate<String, String> redisTemplate;
 
     //用于保存连接的channel，通过appkey 获取对应连接，给指定客户端发送数据 如果channel失效，从map中移除。
-    public static ConcurrentMap<String, Channel> channelMap =
-            new ConcurrentHashMap<String, Channel>();
+    public static ConcurrentMap<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -51,8 +51,14 @@ public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<Stri
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         //当有连接断开时，检查非活跃channel，去除
-        checkChannelMap();
-        super.channelInactive(ctx);
+        for (Map.Entry entry : channelMap.entrySet()) {
+            if (entry.getValue() == ctx.channel()) {
+                channelMap.remove(entry.getKey());
+                logger.info(entry.getKey() + " is Inactive,remove from channelMap");
+                super.channelInactive(ctx);
+                break;
+            }
+        }
     }
 
     @Override
