@@ -67,10 +67,9 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
 //                    登录后才接收心跳连接
                     if (channelMap.containsKey(baseMsg.getAppkey())) {
                         PingMsg replyPing = new PingMsg();
-                        System.out.println("get ping from " + baseMsg.getAppkey());
                         ctx.channel().writeAndFlush(replyPing);
                     } else {
-                        ctx.close();
+                        ctx.writeAndFlush("Please login first").addListener(ChannelFutureListener.CLOSE);
                     }
                 }
                 break;
