@@ -18,7 +18,7 @@ import java.util.List;
  * Created by shaw on 2017/2/7 0007.
  */
 @ChannelHandler.Sharable
-public class MsgDecoder extends MessageToMessageDecoder<ByteBuf> {
+public class JsonMsgDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {

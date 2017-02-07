@@ -21,9 +21,11 @@ import static com.shaw.constants.Constants.USER_CLIENT_CONNECT;
 
 /**
  * Created by shaw on 2017/1/10 0010.
+ * 弃用，使用新的RemoteTaskServerHandler
  */
 @Component
 @ChannelHandler.Sharable
+@Deprecated
 public class SimpleMessageServerHandler extends SimpleChannelInboundHandler<String> {
 
     public static Logger logger = LoggerFactory.getLogger(SimpleMessageServerHandler.class);

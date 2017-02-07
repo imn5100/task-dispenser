@@ -22,8 +22,8 @@ import static com.shaw.constants.Constants.USER_CLIENT_CONNECT;
  */
 @Component
 @ChannelHandler.Sharable
-public class NettyServerHandler extends SimpleChannelInboundHandler<BaseMsg> {
-    public static Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
+public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg> {
+    public static Logger logger = LoggerFactory.getLogger(RemoteTaskServerHandler.class);
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
     //用于保存连接的channel，通过appkey 获取对应连接，给指定客户端发送数据 如果channel失效，从map中移除。
@@ -42,7 +42,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<BaseMsg> {
                 } else {
                     JSONObject infoObject = JSONObject.parseObject(info);
                     String appSercet = infoObject.getString("appsecret");
-                    if (message.getAppkey().equals(appSercet)) {
+                    if (message.getAppsecret().equals(appSercet)) {
                         //登录验证通过
                         //当重复连接时，移除上一个连接
                         Channel channel = channelMap.get(message.getAppkey());
@@ -61,30 +61,36 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<BaseMsg> {
             } else {
                 ctx.writeAndFlush("Params is Wrong").addListener(ChannelFutureListener.CLOSE);
             }
-        }
-        switch (baseMsg.getType()) {
-            case PING: {
-                PingMsg replyPing = new PingMsg();
-                ctx.channel().writeAndFlush(replyPing);
-            }
-            break;
-            case ASK: {
-                //收到客户端的请求
-                AskMsg askMsg = (AskMsg) baseMsg;
-                ctx.close();
-            }
-            break;
-            default:
-                ctx.close();
+        } else {
+            switch (baseMsg.getType()) {
+                case PING: {
+//                    登录后才接收心跳连接
+                    if (channelMap.containsKey(baseMsg.getAppkey())) {
+                        PingMsg replyPing = new PingMsg();
+                        System.out.println("get ping from " + baseMsg.getAppkey());
+                        ctx.channel().writeAndFlush(replyPing);
+                    } else {
+                        ctx.close();
+                    }
+                }
                 break;
+                case ASK: {
+                    //收到客户端的请求
+                    AskMsg askMsg = (AskMsg) baseMsg;
+                    ctx.close();
+                }
+                break;
+                default:
+                    ctx.close();
+                    break;
+            }
         }
     }
 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getMessage());
-        cause.printStackTrace();
+        logger.error("Handler exceptionCaught", cause);
         removeFromChannelMap(ctx.channel());
         ctx.close();
     }
@@ -99,6 +105,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<BaseMsg> {
         for (Map.Entry entry : channelMap.entrySet()) {
             if (entry.getValue() == channel) {
                 channelMap.remove(entry.getKey());
+                redisTemplate.opsForSet().remove(USER_CLIENT_CONNECT, entry.getKey());
                 logger.info(entry.getKey() + " is Inactive,remove from channelMap");
                 break;
             }
@@ -132,7 +139,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<BaseMsg> {
                     logger.info(key + " is disconnect,Remove from channelMap");
                 }
             } else {
-                SimpleMessageServerHandler.channelMap.remove(key);
+                channelMap.remove(key);
                 redisTemplate.opsForSet().remove(USER_CLIENT_CONNECT, key);
                 logger.info(key + " is disconnect,Remove from channelMap");
             }

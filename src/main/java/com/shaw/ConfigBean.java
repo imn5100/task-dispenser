@@ -1,7 +1,6 @@
 package com.shaw;
 
-import com.shaw.netty.NettyServerHandler;
-import com.shaw.netty.SimpleMessageServerHandler;
+import com.shaw.netty.RemoteTaskServerHandler;
 import com.shaw.netty.SocketMsgServer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +16,7 @@ public class ConfigBean {
     private Integer port;
 
     @Bean
-    public SocketMsgServer socketMsgServer(NettyServerHandler handler) {
+    public SocketMsgServer socketMsgServer(RemoteTaskServerHandler handler) {
         return new SocketMsgServer(port, handler);
     }
 }

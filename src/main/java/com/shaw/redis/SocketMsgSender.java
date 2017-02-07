@@ -1,7 +1,7 @@
 package com.shaw.redis;
 
 import com.alibaba.fastjson.JSONObject;
-import com.shaw.netty.SimpleMessageServerHandler;
+import com.shaw.netty.RemoteTaskServerHandler;
 import com.shaw.netty.SocketMessage;
 import com.shaw.utils.ThreadPoolManager;
 import io.netty.util.concurrent.Future;
@@ -26,7 +26,7 @@ public class SocketMsgSender {
           @Override
           public void run() {
             io.netty.channel.Channel channel =
-                SimpleMessageServerHandler.channelMap.get(msg.getAppKey());
+                RemoteTaskServerHandler.channelMap.get(msg.getAppKey());
             if (channel != null)
               if (channel.isActive()) {
                 //检查是否是退出消息，如果是这直接发送关闭连接

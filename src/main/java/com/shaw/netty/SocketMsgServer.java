@@ -5,10 +5,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.Delimiters;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
 /**
@@ -40,8 +36,8 @@ public class SocketMsgServer {
                                     //增加多个的处理类到 ChannelPipeline 上
                                     ChannelPipeline pipeline = ch.pipeline();
 //                                          pipeline.addLast("framer",new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
-                                    //数据编码解码直接使用string
-                                    pipeline.addLast("decoder", new MsgDecoder());
+                                    //数据编码解码直接使用自定义Json 解码
+                                    pipeline.addLast("decoder", new JsonMsgDecoder());
                                     pipeline.addLast("encoder", new StringEncoder());
                                     pipeline.addLast("handler", handler);
                                 }

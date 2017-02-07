@@ -3,7 +3,6 @@ package com.shaw;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.shaw.constants.Constants;
-import com.shaw.netty.SimpleMessageServerHandler;
 import com.shaw.utils.DownloadUtils;
 import com.shaw.utils.ThreadPoolManager;
 import org.junit.Test;
