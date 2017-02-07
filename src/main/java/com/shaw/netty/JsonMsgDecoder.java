@@ -22,11 +22,12 @@ public class JsonMsgDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+        // 直接将接收到的数据编码为 字符串。
         String s = msg.toString(Charset.defaultCharset());
-        BaseMsg message = null;
+        //如果接受到的消息格式不对直接关闭连接。
         try {
             if (s.startsWith("{")) {
-                message = JSON.parseObject(s, BaseMsg.class);
+                BaseMsg message = JSON.parseObject(s, BaseMsg.class);
                 switch (message.getType()) {
                     case ASK:
                         message = JSON.parseObject(s, AskMsg.class);
@@ -38,6 +39,7 @@ public class JsonMsgDecoder extends MessageToMessageDecoder<ByteBuf> {
                         message = JSON.parseObject(s, PingMsg.class);
                         break;
                 }
+                out.add(message);
             } else {
                 ctx.channel().writeAndFlush("No JSON object could be decoded")
                         .addListener(ChannelFutureListener.CLOSE);
@@ -48,6 +50,5 @@ public class JsonMsgDecoder extends MessageToMessageDecoder<ByteBuf> {
                     .addListener(ChannelFutureListener.CLOSE);
             return;
         }
-        out.add(message);
     }
 }
