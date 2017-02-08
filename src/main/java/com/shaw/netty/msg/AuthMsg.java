@@ -6,6 +6,7 @@ package com.shaw.netty.msg;
  */
 public class AuthMsg extends BaseMsg {
     private String appsecret;
+    private String appkey;
 
     public AuthMsg() {
         setType(MsgType.AUTH);
@@ -17,5 +18,13 @@ public class AuthMsg extends BaseMsg {
 
     public void setAppsecret(String appsecret) {
         this.appsecret = appsecret;
+    }
+
+    public String getAppkey() {
+        return appkey;
+    }
+
+    public void setAppkey(String appkey) {
+        this.appkey = appkey;
     }
 }

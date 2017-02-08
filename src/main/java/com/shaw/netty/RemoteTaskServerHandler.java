@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static com.shaw.constants.Constants.USER_AUTH_KEY;
@@ -65,7 +66,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
             switch (baseMsg.getType()) {
                 case PING: {
 //                    登录后才接收心跳连接
-                    if (channelMap.containsKey(baseMsg.getAppkey())) {
+                    if (channelMap.containsKey(baseMsg.getSessionId())) {
                         PingMsg replyPing = new PingMsg();
                         ctx.channel().writeAndFlush(replyPing);
                     } else {
@@ -75,7 +76,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 break;
                 case ASK: {
                     //收到客户端的请求
-                    AskMsg askMsg = (AskMsg) baseMsg;
+//                    AskMsg askMsg = (AskMsg) baseMsg;
                     ctx.close();
                 }
                 break;

@@ -29,14 +29,14 @@ public class JsonMsgDecoder extends MessageToMessageDecoder<ByteBuf> {
             if (s.startsWith("{")) {
                 BaseMsg message = JSON.parseObject(s, BaseMsg.class);
                 switch (message.getType()) {
-                    case ASK:
-                        message = JSON.parseObject(s, AskMsg.class);
+                    case PING:
+                        message = JSON.parseObject(s, PingMsg.class);
                         break;
                     case AUTH:
                         message = JSON.parseObject(s, AuthMsg.class);
                         break;
-                    case PING:
-                        message = JSON.parseObject(s, PingMsg.class);
+                    case ASK:
+                        message = JSON.parseObject(s, AskMsg.class);
                         break;
                 }
                 out.add(message);
