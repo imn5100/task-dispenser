@@ -69,7 +69,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                         PingMsg replyPing = new PingMsg();
                         ctx.channel().writeAndFlush(replyPing);
                     } else {
-                        ctx.writeAndFlush("Please login first").addListener(ChannelFutureListener.CLOSE);
+                        ctx.writeAndFlush("Please login in first").addListener(ChannelFutureListener.CLOSE);
                     }
                 }
                 break;
