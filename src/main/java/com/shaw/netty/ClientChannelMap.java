@@ -40,7 +40,7 @@ public class ClientChannelMap {
 
     public synchronized void put(String appKey, String sessionId, Channel socketChannel) {
         map.put(sessionId, socketChannel);
-        appKeySessionIdMap.put(appKey, sessionId);
+        appKeySessionIdMap.forcePut(appKey, sessionId);
         redisTemplate.opsForSet().add(USER_CLIENT_CONNECT, appKey);
     }
 

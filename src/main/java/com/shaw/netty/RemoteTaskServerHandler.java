@@ -54,8 +54,8 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                         }
                         logger.info("put channel. AppKey:" + message.getAppKey());
                         String sessionId = UUID.randomUUID().toString();
-                        clientChannelMap.put(sessionId, message.getAppKey(), ctx.channel());
-                        ctx.writeAndFlush("{\"success\":\"" + sessionId + "\"");
+                        clientChannelMap.put(message.getAppKey(), sessionId, ctx.channel());
+                        ctx.writeAndFlush("{\"success\":\"" + sessionId + "\"}");
                     } else {
                         ctx.writeAndFlush("AppKey or AppSecret is wrong").addListener(ChannelFutureListener.CLOSE);
                     }
@@ -65,7 +65,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
             }
         } else {
             //登录验证
-            if (clientChannelMap.isConnected(baseMsg.getSessionId())) {
+            if (!clientChannelMap.isConnected(baseMsg.getSessionId())) {
                 ctx.writeAndFlush("Please login in first").addListener(ChannelFutureListener.CLOSE);
                 return;
             }
