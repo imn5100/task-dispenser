@@ -28,33 +28,34 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
     //用于保存连接的channel，通过appkey 获取对应连接，给指定客户端发送数据 如果channel失效，从map中移除。
-    public static ConcurrentMap<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
+    public static ClientChannelMap clientChannelMap;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, BaseMsg baseMsg) throws Exception {
         if (MsgType.AUTH.equals(baseMsg.getType())) {
             AuthMsg message = (AuthMsg) baseMsg;
-            if (!StringUtils.isEmpty(message.getAppkey()) && !StringUtils.isEmpty(message.getAppSecret())) {
-                String info = redisTemplate.opsForValue().get(String.format(USER_AUTH_KEY, message.getAppkey()));
+            if (!StringUtils.isEmpty(message.getAppKey()) && !StringUtils.isEmpty(message.getAppSecret())) {
+                String info = redisTemplate.opsForValue().get(String.format(USER_AUTH_KEY, message.getAppKey()));
                 //未通过登录验证
                 if (info == null) {
                     ctx.writeAndFlush("Please try to connect after login in https://shawblog.me/remoteTask/main.html ").addListener(ChannelFutureListener.CLOSE);
                     return;
                 } else {
                     JSONObject infoObject = JSONObject.parseObject(info);
-                    String appSercet = infoObject.getString("appsecret");
-                    if (message.getAppSecret().equals(appSercet)) {
+                    String appSecret = infoObject.getString("appsecret");
+                    if (message.getAppSecret().equals(appSecret)) {
                         //登录验证通过
                         //当重复连接时，移除上一个连接
-                        Channel channel = channelMap.get(message.getAppkey());
+                        Channel channel = clientChannelMap.getByAppKey(message.getAppKey());
                         if (channel != null && channel.isActive()) {
-                            logger.info("remove old channel. appkey:" + message.getAppkey());
+                            logger.info("remove old channel. AppKey:" + message.getAppKey());
                             channel.close();
+                            clientChannelMap.removeByAppKey(message.getAppKey());
                         }
-                        logger.info("put channel. appkey:" + message.getAppkey());
-                        channelMap.put(message.getAppkey(), ctx.channel());
-                        redisTemplate.opsForSet().add(USER_CLIENT_CONNECT, message.getAppkey());
-                        ctx.writeAndFlush("success");
+                        logger.info("put channel. AppKey:" + message.getAppKey());
+                        String sessionId = UUID.randomUUID().toString();
+                        clientChannelMap.put(sessionId, message.getAppKey(), ctx.channel());
+                        ctx.writeAndFlush("{\"success\":\"" + sessionId + "\"");
                     } else {
                         ctx.writeAndFlush("AppKey or AppSecret is wrong").addListener(ChannelFutureListener.CLOSE);
                     }
@@ -63,15 +64,15 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 ctx.writeAndFlush("Params is Wrong").addListener(ChannelFutureListener.CLOSE);
             }
         } else {
+            //登录验证
+            if (clientChannelMap.isConnected(baseMsg.getSessionId())) {
+                ctx.writeAndFlush("Please login in first").addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
             switch (baseMsg.getType()) {
                 case PING: {
-//                    登录后才接收心跳连接
-                    if (channelMap.containsKey(baseMsg.getSessionId())) {
-                        PingMsg replyPing = new PingMsg();
-                        ctx.channel().writeAndFlush(replyPing);
-                    } else {
-                        ctx.writeAndFlush("Please login in first").addListener(ChannelFutureListener.CLOSE);
-                    }
+                    PingMsg replyPing = new PingMsg();
+                    ctx.channel().writeAndFlush(replyPing);
                 }
                 break;
                 case ASK: {
@@ -97,53 +98,18 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        //当有连接断开时，检查非活跃channel，去除
-        removeFromChannelMap(ctx.channel());
+        String appKey = removeFromChannelMap(ctx.channel());
+        logger.info(appKey + " is Inactive,remove from channelMap");
     }
 
-    private void removeFromChannelMap(Channel channel) {
-        for (Map.Entry entry : channelMap.entrySet()) {
-            if (entry.getValue() == channel) {
-                channelMap.remove(entry.getKey());
-                redisTemplate.opsForSet().remove(USER_CLIENT_CONNECT, entry.getKey());
-                logger.info(entry.getKey() + " is Inactive,remove from channelMap");
-                break;
-            }
-        }
+    private String removeFromChannelMap(Channel channel) {
+        return clientChannelMap.remove(channel);
     }
 
     @PostConstruct
-    private void runScheduler() {
-        //当SimpleMessageServerHandler 被创建时，开启一个监视channelMap的定时执行器。
-        //定时检查channel,如果channel非活跃的 关闭channel，并从map中移除
-        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        //每20分钟检查一次所有连接（和博客主站登录session时效相同）
-        scheduler.scheduleAtFixedRate(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        checkChannelMap();
-                    }
-                }, 20, 20, TimeUnit.MINUTES);
+    private void initClientChannelMap() {
+        clientChannelMap = ClientChannelMap.getInstance(this.redisTemplate);
     }
 
-    //当连接数开始增加到一定数量时，需要考虑移除的性能问题
-    private void checkChannelMap() {
-        for (String key : channelMap.keySet()) {
-            final Channel channel = channelMap.get(key);
-            if (channel != null) {
-                if (!channel.isActive()) {
-                    channel.close();
-                    channelMap.remove(key);
-                    redisTemplate.opsForSet().remove(USER_CLIENT_CONNECT, key);
-                    logger.info(key + " is disconnect,Remove from channelMap");
-                }
-            } else {
-                channelMap.remove(key);
-                redisTemplate.opsForSet().remove(USER_CLIENT_CONNECT, key);
-                logger.info(key + " is disconnect,Remove from channelMap");
-            }
-        }
-    }
 
 }

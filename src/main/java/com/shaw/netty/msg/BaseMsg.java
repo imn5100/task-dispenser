@@ -9,7 +9,7 @@ public class BaseMsg implements Serializable {
     //消息类型  默认为ping消息 不做任何操作
     private MsgType type = MsgType.PING;
     //消息clientId 标示消息来源，这里直接使用appkey
-    private String sessionId;
+    private String sessionId = "";
 
     public BaseMsg() {
     }

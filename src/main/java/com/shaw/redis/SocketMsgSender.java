@@ -27,7 +27,7 @@ public class SocketMsgSender {
                     @Override
                     public void run() {
                         io.netty.channel.Channel channel =
-                                RemoteTaskServerHandler.channelMap.get(msg.getAppKey());
+                                RemoteTaskServerHandler.clientChannelMap.getByAppKey(msg.getAppKey());
                         if (channel != null)
                             if (channel.isActive()) {
                                 //检查是否是退出消息，如果是这直接发送关闭连接
