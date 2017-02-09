@@ -11,9 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.Map;
+import javax.annotation.PreDestroy;
 import java.util.UUID;
-import java.util.concurrent.*;
 
 import static com.shaw.constants.Constants.USER_AUTH_KEY;
 import static com.shaw.constants.Constants.USER_CLIENT_CONNECT;
@@ -76,13 +75,13 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 }
                 break;
                 case ASK: {
-                    //收到客户端的请求
-//                    AskMsg askMsg = (AskMsg) baseMsg;
-                    ctx.close();
+                    //收到客户端的请求  暂时制作echo处理
+                    AskMsg askMsg = (AskMsg) baseMsg;
+                    ctx.writeAndFlush(askMsg.getContents());
                 }
                 break;
                 default:
-                    ctx.close();
+                    ctx.writeAndFlush("UnKnow Message Type").addListener(ChannelFutureListener.CLOSE);
                     break;
             }
         }
@@ -99,7 +98,9 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         String appKey = removeFromChannelMap(ctx.channel());
-        logger.info(appKey + " is Inactive,remove from channelMap");
+        // 当channel是登录状态时退出的，可以得到appKey信息，否则无法得到，不记录日志
+        if (appKey != null)
+            logger.info(appKey + " is Inactive,remove from channelMap");
     }
 
     private String removeFromChannelMap(Channel channel) {
@@ -109,7 +110,14 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     @PostConstruct
     private void initClientChannelMap() {
         clientChannelMap = ClientChannelMap.getInstance(this.redisTemplate);
+        //启动时清除所有未清除的垃圾连接信息
+        redisTemplate.delete(USER_CLIENT_CONNECT);
     }
 
+    @PreDestroy
+    public void destroy() {
+        //关闭服务器时，移除所有登录连接
+        clientChannelMap.destroy();
+    }
 
 }

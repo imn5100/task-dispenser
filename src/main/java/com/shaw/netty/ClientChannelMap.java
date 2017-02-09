@@ -3,12 +3,12 @@ package com.shaw.netty;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PreDestroy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,10 +111,12 @@ public class ClientChannelMap {
         return null;
     }
 
-    @PreDestroy
     public void destroy() {
-        //关闭服务器时，移除所有登录连接
         redisTemplate.delete(USER_CLIENT_CONNECT);
+        for (Channel channel : map.values()) {
+            if (channel != null && channel.isActive())
+                channel.writeAndFlush("The server is stop.").addListener(ChannelFutureListener.CLOSE);
+        }
         map.clear();
         appKeySessionIdMap.clear();
     }
