@@ -5,19 +5,19 @@ package com.shaw.netty.msg;
  * 登录验证消息
  */
 public class AuthMsg extends BaseMsg {
-    private String appsecret;
+    private String appSecret;
     private String appkey;
 
     public AuthMsg() {
         setType(MsgType.AUTH);
     }
 
-    public String getAppsecret() {
-        return appsecret;
+    public String getAppSecret() {
+        return appSecret;
     }
 
-    public void setAppsecret(String appsecret) {
-        this.appsecret = appsecret;
+    public void setAppSecret(String appSecret) {
+        this.appSecret = appSecret;
     }
 
     public String getAppkey() {

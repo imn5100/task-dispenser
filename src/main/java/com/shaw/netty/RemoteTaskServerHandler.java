@@ -34,7 +34,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     protected void channelRead0(ChannelHandlerContext ctx, BaseMsg baseMsg) throws Exception {
         if (MsgType.AUTH.equals(baseMsg.getType())) {
             AuthMsg message = (AuthMsg) baseMsg;
-            if (!StringUtils.isEmpty(message.getAppkey()) && !StringUtils.isEmpty(message.getAppsecret())) {
+            if (!StringUtils.isEmpty(message.getAppkey()) && !StringUtils.isEmpty(message.getAppSecret())) {
                 String info = redisTemplate.opsForValue().get(String.format(USER_AUTH_KEY, message.getAppkey()));
                 //未通过登录验证
                 if (info == null) {
@@ -43,7 +43,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 } else {
                     JSONObject infoObject = JSONObject.parseObject(info);
                     String appSercet = infoObject.getString("appsecret");
-                    if (message.getAppsecret().equals(appSercet)) {
+                    if (message.getAppSecret().equals(appSercet)) {
                         //登录验证通过
                         //当重复连接时，移除上一个连接
                         Channel channel = channelMap.get(message.getAppkey());
