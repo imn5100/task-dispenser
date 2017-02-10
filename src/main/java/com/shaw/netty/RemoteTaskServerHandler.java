@@ -26,7 +26,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     public static Logger logger = LoggerFactory.getLogger(RemoteTaskServerHandler.class);
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-    //用于保存连接的channel，通过appkey 获取对应连接，给指定客户端发送数据 如果channel失效，从map中移除。
+    //用于保存连接的channel，通过appKey,sessionId 获取对应连接，给指定客户端发送数据。
     public static ClientChannelMap clientChannelMap;
 
     @Override
@@ -41,7 +41,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                     return;
                 } else {
                     JSONObject infoObject = JSONObject.parseObject(info);
-                    String appSecret = infoObject.getString("appsecret");
+                    String appSecret = infoObject.getString("appSecret");
                     if (message.getAppSecret().equals(appSecret)) {
                         //登录验证通过
                         //当重复连接时，移除上一个连接
@@ -115,6 +115,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     }
 
     @PreDestroy
+    //改注解 需要托管给spring才能正常执行析构方法
     public void destroy() {
         //关闭服务器时，移除所有登录连接
         clientChannelMap.destroy();
