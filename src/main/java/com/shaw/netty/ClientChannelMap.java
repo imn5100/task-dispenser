@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.shaw.constants.Constants.QUIT_CMD;
 import static com.shaw.constants.Constants.USER_CLIENT_CONNECT;
 
 /**
@@ -115,7 +116,7 @@ public class ClientChannelMap {
         redisTemplate.delete(USER_CLIENT_CONNECT);
         for (Channel channel : map.values()) {
             if (channel != null && channel.isActive())
-                channel.writeAndFlush("The server is stop.").addListener(ChannelFutureListener.CLOSE);
+                channel.writeAndFlush(QUIT_CMD).addListener(ChannelFutureListener.CLOSE);
         }
         map.clear();
         appKeySessionIdMap.clear();

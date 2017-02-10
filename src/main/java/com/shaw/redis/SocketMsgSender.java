@@ -9,12 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
+import static com.shaw.constants.Constants.QUIT_CMD;
+
 /**
  * Created by shaw on 2017/1/11 0011.
  */
 public class SocketMsgSender {
     public static Logger logger = LoggerFactory.getLogger(SocketMsgSender.class);
-    public static final String QUIT = "quit";
 
     public static void handlerRedisMsg(final SocketMessage msg) {
         if (msg == null || StringUtils.isEmpty(msg.getAppKey())) {
@@ -32,7 +33,7 @@ public class SocketMsgSender {
                             if (channel.isActive()) {
                                 //检查是否是退出消息，如果是这直接发送关闭连接
                                 if (checkQuit(msg.getContents())) {
-                                    channel.writeAndFlush("An quit command is received.").addListener(ChannelFutureListener.CLOSE);
+                                    channel.writeAndFlush(QUIT_CMD).addListener(ChannelFutureListener.CLOSE);
                                 } else {
                                     logger.info("send msg to:" + msg.getAppKey() + " content:" + msg.getContents());
                                     channel.writeAndFlush(msg.getContents());
@@ -51,7 +52,7 @@ public class SocketMsgSender {
         }
         try {
             JSONObject jsonObject = JSONObject.parseObject(contents);
-            if (QUIT.equalsIgnoreCase(jsonObject.getString("contents"))) {
+            if (QUIT_CMD.equalsIgnoreCase(jsonObject.getString("contents"))) {
                 return true;
             } else {
                 return false;
