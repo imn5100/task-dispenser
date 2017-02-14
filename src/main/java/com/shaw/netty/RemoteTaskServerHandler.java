@@ -29,6 +29,11 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     //用于保存连接的channel，通过appKey,sessionId 获取对应连接，给指定客户端发送数据。
     public static ClientChannelMap clientChannelMap;
 
+    /**
+     * 数据接收处理逻辑。
+     * 传入的对象由JsonMsgDecoder 先进行解码，这里直接使用对象。
+     * 目前消息种类分3中Auth 登录消息 唯一不需要sessionId 。PING 心跳测试,ASK 普通数据请求 暂时不做处理,只把请求数据返回
+     */
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, BaseMsg baseMsg) throws Exception {
         if (MsgType.AUTH.equals(baseMsg.getType())) {
@@ -75,7 +80,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 }
                 break;
                 case ASK: {
-                    //收到客户端的请求  暂时制作echo处理
+                    //收到客户端的请求  暂时只做echo处理
                     AskMsg askMsg = (AskMsg) baseMsg;
                     ctx.writeAndFlush(askMsg.getContents());
                 }
@@ -98,7 +103,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         String appKey = removeFromChannelMap(ctx.channel());
-        // 当channel是登录状态时退出的，可以得到appKey信息，否则无法得到，不记录日志
+        // 当channel是登录状态时退出的，可以得到appKey信息,才记录退出日志，否则无法得到，不记录日志
         if (appKey != null)
             logger.info(appKey + " is Inactive,remove from channelMap");
     }
