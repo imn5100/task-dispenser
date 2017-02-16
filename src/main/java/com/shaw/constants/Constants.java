@@ -12,6 +12,6 @@ public class Constants {
     public static final String USER_AUTH_KEY = "UserAuthKey:%s";
     //客户端连接状态 key
     public static final String USER_CLIENT_CONNECT = "user_client_connect";
-
+    //客户端退出标识。接收到此信息，客户端主动退出
     public static final String QUIT_CMD = "quit";
 }

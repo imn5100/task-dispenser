@@ -17,6 +17,8 @@ import static com.shaw.constants.Constants.USER_CLIENT_CONNECT;
 
 /**
  * Created by shaw on 2017/2/9 0009.
+ * 用于装载 客户端连接的Channel的工具类。
+ * 提供基本的获取channel方法，并维护channel。
  */
 public class ClientChannelMap {
     public static Logger logger = LoggerFactory.getLogger(ClientChannelMap.class);

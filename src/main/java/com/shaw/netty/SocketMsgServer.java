@@ -8,7 +8,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.string.StringEncoder;
 
 /**
- * Created by Administrator on 2017/1/11 0011.
+ * Created by shaw on 2017/1/11 0011.
  */
 public class SocketMsgServer {
 
@@ -20,6 +20,9 @@ public class SocketMsgServer {
         this.handler = handler;
     }
 
+    /**
+     * 运行socket 服务器入口
+     */
     public void run() throws InterruptedException {
         //用于接收连接
         EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -38,6 +41,7 @@ public class SocketMsgServer {
 //                                          pipeline.addLast("framer",new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
                                     //数据编码解码直接使用自定义Json 解码
                                     pipeline.addLast("decoder", new JsonMsgDecoder());
+                                    //使用String 进行编码，直接输出string型到客户端
                                     pipeline.addLast("encoder", new StringEncoder());
                                     pipeline.addLast("handler", handler);
                                 }
