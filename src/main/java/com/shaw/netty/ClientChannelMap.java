@@ -26,9 +26,10 @@ public class ClientChannelMap {
     private static Map<String, Channel> map = new ConcurrentHashMap<String, Channel>();
     //记录 连接 客户端对应appKey
     private static BiMap<String, String> appKeySessionIdMap = HashBiMap.create();
+    //redis客户端操作类。
     private RedisTemplate redisTemplate;
     public static ClientChannelMap INSTANCE = null;
-
+    //保证创建实例的线程安全
     public static synchronized ClientChannelMap getInstance(RedisTemplate redisTemplate) {
         if (INSTANCE == null) {
             INSTANCE = new ClientChannelMap();
@@ -41,9 +42,12 @@ public class ClientChannelMap {
 
     }
 
-    public synchronized void put(String appKey, String sessionId, Channel socketChannel) {
+    // 尝试缩小锁范围。
+    public void put(String appKey, String sessionId, Channel socketChannel) {
         map.put(sessionId, socketChannel);
-        appKeySessionIdMap.forcePut(appKey, sessionId);
+        synchronized (appKeySessionIdMap) {
+            appKeySessionIdMap.forcePut(appKey, sessionId);
+        }
         redisTemplate.opsForSet().add(USER_CLIENT_CONNECT, appKey);
     }
 
@@ -114,6 +118,9 @@ public class ClientChannelMap {
         return null;
     }
 
+    /**
+     * 析构方法。用于清除连接时保存的信息
+     */
     public void destroy() {
         redisTemplate.delete(USER_CLIENT_CONNECT);
         for (Channel channel : map.values()) {
