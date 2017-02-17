@@ -75,6 +75,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
             }
             switch (baseMsg.getType()) {
                 case PING: {
+                    //接收到心跳，返回心跳
                     PingMsg replyPing = new PingMsg();
                     ctx.channel().writeAndFlush(replyPing);
                 }
@@ -86,6 +87,7 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 }
                 break;
                 default:
+                    //session验证通过，但消息属于未解析类型消息，直接关闭连接。
                     ctx.writeAndFlush("UnKnow Message Type").addListener(ChannelFutureListener.CLOSE);
                     break;
             }

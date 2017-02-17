@@ -18,7 +18,7 @@ public class RedisMessageReceiver {
     public static final String DEFAULT_LISTENEER_METHOD = "receiveMessage";
 
     /**
-     * 消息消费方法
+     * redis消息消费方法
      */
     public void receiveMessage(String message) {
         JSONObject messageObject = JSONObject.parseObject(message);
@@ -44,6 +44,7 @@ public class RedisMessageReceiver {
                 logger.info("Wrong Message:" + message);
             }
         } else if (Constants.TOPIC_TASK.equals(topic)) {
+            //来自web端对socket 服务器的redis消息推送。将消息解码为SocketMessage，交给SocketMsgSender处理
             SocketMessage socketMessage = null;
             try {
                 socketMessage =

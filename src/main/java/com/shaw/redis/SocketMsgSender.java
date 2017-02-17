@@ -13,6 +13,7 @@ import static com.shaw.constants.Constants.QUIT_CMD;
 
 /**
  * Created by shaw on 2017/1/11 0011.
+ * 用于解析redis推送消息，并将消息推送给指定的socket client。
  */
 public class SocketMsgSender {
     public static Logger logger = LoggerFactory.getLogger(SocketMsgSender.class);
@@ -22,7 +23,7 @@ public class SocketMsgSender {
             logger.info("msg is null");
             return;
         }
-        //异步执行，发送接收到的socket任务消息到 已连接的客户端。
+        //异步执行，发送接收到的socket任务消息到指定的客户端。
         ThreadPoolManager.INSTANCE.execute(
                 new Runnable() {
                     @Override
@@ -45,6 +46,9 @@ public class SocketMsgSender {
                 });
     }
 
+    /**
+     * 检查消息内容是否为退出，如果是退出命令，socket服务端要主动关闭channel连接
+     */
     public static boolean checkQuit(String contents) {
         //内容为空则关闭连接
         if (StringUtils.isEmpty(contents)) {

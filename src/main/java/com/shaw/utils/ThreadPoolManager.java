@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.*;
 
 /**
- * 异步任务调用线程池
+ * 异步任务调用线程池工具
  */
 public enum ThreadPoolManager {
     INSTANCE; // 唯一的实例
@@ -54,7 +54,7 @@ public enum ThreadPoolManager {
             };
             // 定时任务执行器
             final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            // 加入定时任务，每10秒输出一次线程池状态
+            // 将日志输出放入定时轮询任务执行器。延迟0秒。每10秒输出一次线程池状态
             scheduler.scheduleAtFixedRate(mAccessBufferThread, 0, 10, TimeUnit.SECONDS);
         }
     }
