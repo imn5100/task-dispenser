@@ -29,6 +29,7 @@ public class ClientChannelMap {
     //redis客户端操作类。
     private RedisTemplate redisTemplate;
     public static ClientChannelMap INSTANCE = null;
+
     //保证创建实例的线程安全
     public static synchronized ClientChannelMap getInstance(RedisTemplate redisTemplate) {
         if (INSTANCE == null) {
@@ -91,6 +92,13 @@ public class ClientChannelMap {
             return appKey;
         }
         return null;
+    }
+
+    public String getAppKeyBySession(String sessionId) {
+        if (StringUtils.isEmpty(sessionId)) {
+            return null;
+        }
+        return appKeySessionIdMap.inverse().get(sessionId);
     }
 
     public boolean isConnected(String sessionId) {

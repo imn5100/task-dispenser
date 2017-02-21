@@ -83,7 +83,15 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                 case ASK: {
                     //收到客户端的请求  暂时只做echo处理
                     AskMsg askMsg = (AskMsg) baseMsg;
-                    ctx.writeAndFlush(askMsg.getContents());
+                    String toAppKey = askMsg.getToAppKey();
+                    Channel toChannel = clientChannelMap.getByAppKey(toAppKey);
+                    if (toChannel == null || !toChannel.isActive()) {
+                        ctx.writeAndFlush("Each other offline。Unable to receive message");
+                    } else {
+                        String fromAppKey = clientChannelMap.getAppKeyBySession(askMsg.getSessionId());
+                        //TODO 通过appKey查询昵称，避免appKey辨识度不足问题
+                        ctx.writeAndFlush("Get Message From " + fromAppKey + ":" + askMsg.getContents());
+                    }
                 }
                 break;
                 default:

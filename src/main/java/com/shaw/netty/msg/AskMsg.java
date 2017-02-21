@@ -11,6 +11,7 @@ public class AskMsg extends BaseMsg {
 
     //请求消息内容
     private String contents;
+    private String toAppKey;
 
     public String getContents() {
         return contents;
@@ -18,5 +19,13 @@ public class AskMsg extends BaseMsg {
 
     public void setContents(String contents) {
         this.contents = contents;
+    }
+
+    public String getToAppKey() {
+        return toAppKey;
+    }
+
+    public void setToAppKey(String toAppKey) {
+        this.toAppKey = toAppKey;
     }
 }
