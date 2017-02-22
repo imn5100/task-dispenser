@@ -90,7 +90,8 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
                     } else {
                         String fromAppKey = clientChannelMap.getAppKeyBySession(askMsg.getSessionId());
                         //TODO 通过appKey查询昵称，避免appKey辨识度不足问题
-                        ctx.writeAndFlush("Get Message From " + fromAppKey + ":" + askMsg.getContents());
+                        //TODO 这里需要设计一个 Username,和appKey 一一对应，appKey用于服务端辨识用户，username用于用户相互辨识。
+                        toChannel.writeAndFlush("Get Message From " + fromAppKey + ":" + askMsg.getContents());
                     }
                 }
                 break;
