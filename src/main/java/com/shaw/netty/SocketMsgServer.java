@@ -46,7 +46,7 @@ public class SocketMsgServer {
                                     pipeline.addLast("handler", handler);
                                 }
                             })
-                    .option(ChannelOption.SO_BACKLOG, 128)//设置 socket 的参数选项比如tcpNoDelay 和 keepAliv
+                    .option(ChannelOption.SO_BACKLOG, 128)//最大连接数
                     .option(ChannelOption.TCP_NODELAY, true) //通过NoDelay禁用Nagle,使消息立即发出去
                     .childOption(ChannelOption.SO_KEEPALIVE, true);//设置保持长连接
             ChannelFuture f = bootstrap.bind(port).sync();

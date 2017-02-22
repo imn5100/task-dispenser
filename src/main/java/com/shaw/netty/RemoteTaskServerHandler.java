@@ -72,33 +72,34 @@ public class RemoteTaskServerHandler extends SimpleChannelInboundHandler<BaseMsg
             if (!clientChannelMap.isConnected(baseMsg.getSessionId())) {
                 ctx.writeAndFlush("Please login in first").addListener(ChannelFutureListener.CLOSE);
                 return;
-            }
-            switch (baseMsg.getType()) {
-                case PING: {
-                    //接收到心跳，返回心跳
-                    PingMsg replyPing = new PingMsg();
-                    ctx.channel().writeAndFlush(replyPing);
-                }
-                break;
-                case ASK: {
-                    //收到客户端的请求  暂时只做echo处理
-                    AskMsg askMsg = (AskMsg) baseMsg;
-                    String toAppKey = askMsg.getToAppKey();
-                    Channel toChannel = clientChannelMap.getByAppKey(toAppKey);
-                    if (toChannel == null || !toChannel.isActive()) {
-                        ctx.writeAndFlush("Each other offline。Unable to receive message");
-                    } else {
-                        String fromAppKey = clientChannelMap.getAppKeyBySession(askMsg.getSessionId());
-                        //TODO 通过appKey查询昵称，避免appKey辨识度不足问题
-                        //TODO 这里需要设计一个 Username,和appKey 一一对应，appKey用于服务端辨识用户，username用于用户相互辨识。
-                        toChannel.writeAndFlush("Get Message From " + fromAppKey + ":" + askMsg.getContents());
+            } else {
+                switch (baseMsg.getType()) {
+                    case PING: {
+                        //接收到心跳，返回心跳
+                        PingMsg replyPing = new PingMsg();
+                        ctx.channel().writeAndFlush(replyPing);
                     }
-                }
-                break;
-                default:
-                    //session验证通过，但消息属于未解析类型消息，直接关闭连接。
-                    ctx.writeAndFlush("UnKnow Message Type").addListener(ChannelFutureListener.CLOSE);
                     break;
+                    case ASK: {
+                        //收到客户端的请求  暂时只做echo处理
+                        AskMsg askMsg = (AskMsg) baseMsg;
+                        String toAppKey = askMsg.getToAppKey();
+                        Channel toChannel = clientChannelMap.getByAppKey(toAppKey);
+                        if (toChannel == null || !toChannel.isActive()) {
+                            ctx.writeAndFlush("Each other offline。Unable to receive message");
+                        } else {
+                            String fromAppKey = clientChannelMap.getAppKeyBySession(askMsg.getSessionId());
+                            //TODO 通过appKey查询昵称，避免appKey辨识度不足问题
+                            //TODO 这里需要设计一个 Username,和appKey 一一对应，appKey用于服务端辨识用户，username用于用户相互辨识。
+                            toChannel.writeAndFlush("Get Message From " + fromAppKey + ":" + askMsg.getContents());
+                        }
+                    }
+                    break;
+                    default:
+                        //session验证通过，但消息属于未解析类型消息，直接关闭连接。
+                        ctx.writeAndFlush("UnKnow Message Type").addListener(ChannelFutureListener.CLOSE);
+                        break;
+                }
             }
         }
     }
